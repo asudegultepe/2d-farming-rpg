@@ -11,6 +11,7 @@ public class Collectable : MonoBehaviour
     {
         Player player = collision.GetComponent<Player>();
         
+
         if(player)
         {
             player.inventory.Add(this);
