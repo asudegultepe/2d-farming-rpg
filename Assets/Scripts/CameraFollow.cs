@@ -8,6 +8,8 @@ public class CameraFollow : MonoBehaviour
 
     Vector3 camOffset;
 
+    public Vector3 minValues, maxValues;
+
     void Start()
     {
         camOffset = transform.position - target.position;
@@ -15,6 +17,12 @@ public class CameraFollow : MonoBehaviour
 
     private void FixedUpdate()
     {
-        transform.position = target.position + camOffset;
+        Vector3 targetPosition = target.position + camOffset;
+        Vector3 boundPosition = new Vector3(
+            Mathf.Clamp(targetPosition.x, minValues.x, maxValues.x),
+            Mathf.Clamp(targetPosition.y, minValues.y, maxValues.y),
+            Mathf.Clamp(targetPosition.z, minValues.z, maxValues.z));
+
+        transform.position = boundPosition;
     }
 }

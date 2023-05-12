@@ -12,6 +12,11 @@ public class Inventory_UI : MonoBehaviour
     [SerializeField] private Canvas canvas;
     private Inventory inventory;
 
+    private void Awake()
+    {
+        canvas = FindObjectOfType<Canvas>();
+    }
+
     void Start()
     {
         /*if (inventoryPanel != null)
@@ -23,11 +28,6 @@ public class Inventory_UI : MonoBehaviour
 
         SetupSlots();
         Refresh();
-    }
-
-    private void Awake()
-    {
-        canvas = FindObjectOfType<Canvas>();
     }
 
     public void Refresh()
@@ -55,7 +55,7 @@ public class Inventory_UI : MonoBehaviour
 
         if (itemToDrop != null)
         {
-            if (!UI_Manager.dragSingle)
+            if (UI_Manager.dragSingle)
             {
                 GameManager.instance.player.DropItem(itemToDrop);
                 inventory.Remove(UI_Manager.draggedSlot.slotID);
@@ -63,7 +63,8 @@ public class Inventory_UI : MonoBehaviour
             else
             {
                 GameManager.instance.player.DropItem(itemToDrop, inventory.slots[UI_Manager.draggedSlot.slotID].count);
-                inventory.Remove(UI_Manager.draggedSlot.slotID, inventory.slots[UI_Manager.draggedSlot.slotID].count);
+                inventory.Remove(UI_Manager.draggedSlot.slotID, 
+                    inventory.slots[UI_Manager.draggedSlot.slotID].count);
             }
             
             Refresh();
@@ -75,10 +76,10 @@ public class Inventory_UI : MonoBehaviour
     public void SlotBeginDrag(Slot_UI slot)
     {
         UI_Manager.draggedSlot = slot;
-        UI_Manager.draggedIcon = Instantiate(UI_Manager.draggedSlot.itemIcon);
+        UI_Manager.draggedIcon = Instantiate(slot.itemIcon);
+        UI_Manager.draggedIcon.transform.SetParent(canvas.transform);
         UI_Manager.draggedIcon.raycastTarget = false;
         UI_Manager.draggedIcon.rectTransform.sizeDelta = new Vector2(40f, 40f);
-        UI_Manager.draggedIcon.transform.SetParent(canvas.transform);
 
         MoveToMousePosition(UI_Manager.draggedIcon.gameObject);
     }
@@ -96,12 +97,16 @@ public class Inventory_UI : MonoBehaviour
 
     public void SlotDrop(Slot_UI slot)
     {
-        Debug.Log("Dragged Slot: " + UI_Manager.draggedSlot.name);
-        Debug.Log("Dragged Slot Inventory: " + UI_Manager.draggedSlot.inventory);
-        Debug.Log("Dropped Slot: " + slot.name);
-        Debug.Log("Dragged Slot: " + slot.inventory);
+        if (UI_Manager.dragSingle)
+        {
+            UI_Manager.draggedSlot.inventory.MoveSlot(UI_Manager.draggedSlot.slotID, slot.slotID, slot.inventory);
+        }
+        else
+        {
+            UI_Manager.draggedSlot.inventory.MoveSlot(UI_Manager.draggedSlot.slotID, slot.slotID, slot.inventory,
+                UI_Manager.draggedSlot.inventory.slots[UI_Manager.draggedSlot.slotID].count);
+        }
 
-        UI_Manager.draggedSlot.inventory.MoveSlot(UI_Manager.draggedSlot.slotID, slot.slotID, slot.inventory);
         GameManager.instance.uiManager.RefreshAll();
     }
 
