@@ -13,7 +13,7 @@ public class Player : MonoBehaviour
 
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Space))
+        if (Input.GetMouseButtonDown(1))
         {
             Vector3Int position = new Vector3Int((int)transform.position.x, (int)transform.position.y, 0);
 

@@ -10,6 +10,8 @@ public class Movement : MonoBehaviour
 
     private Vector3 direction;
 
+    public Vector2 lastMotionVector;
+
     // get input from player
     // apply movement to sprite
     
@@ -19,6 +21,7 @@ public class Movement : MonoBehaviour
         float vertical = Input.GetAxisRaw("Vertical");
 
         direction = new Vector3(horizontal, vertical);
+        lastMotionVector = new Vector2(horizontal, vertical).normalized;
 
         AnimateMovement(direction);
     }
