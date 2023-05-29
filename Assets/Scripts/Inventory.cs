@@ -4,7 +4,7 @@ using UnityEngine;
 
 [System.Serializable]
 public class Inventory
-{
+{/*
     [System.Serializable]
     public class Slot
     {
@@ -73,7 +73,7 @@ public class Inventory
     }
 
     public List<Slot> slots = new List<Slot>();
-
+   
     public Inventory(int numSlots)
     {
         for(int i = 0; i < numSlots; i++)
@@ -134,4 +134,4 @@ public class Inventory
             }
         }
     }
-}
+*/}
