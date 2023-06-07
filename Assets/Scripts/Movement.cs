@@ -1,4 +1,66 @@
+using System;
 using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+[RequireComponent(typeof(Rigidbody2D))]
+public class Movement : MonoBehaviour
+{
+    Rigidbody2D rigidbody2d;
+    [SerializeField] float speed;
+
+    Vector2 motionVector;
+    public Vector2 lastMotionVector;
+
+    public Animator animator;
+    public bool isMoving;
+
+    private void Awake()
+    {
+        animator = GetComponent<Animator>();
+        rigidbody2d = GetComponent<Rigidbody2D>();
+    }
+
+    private void Update()
+    {
+        float horizontal = Input.GetAxisRaw("Horizontal");
+        float vertical = Input.GetAxisRaw("Vertical");
+
+        motionVector = new Vector2(
+            horizontal,
+            vertical
+            );
+        animator.SetFloat("horizontal", horizontal);
+        animator.SetFloat("vertical", vertical);
+
+        isMoving = horizontal != 0 || vertical != 0;
+        animator.SetBool("isMoving", true);
+
+        if (horizontal != 0 || vertical != 0)
+        {
+            lastMotionVector = new Vector2(
+                horizontal,
+                vertical
+                ).normalized;
+
+            animator.SetFloat("lastHorizontal", horizontal);
+            animator.SetFloat("lastVertical", vertical);
+        }
+    }
+
+    private void FixedUpdate()
+    {
+        Move();
+    }
+
+    private void Move()
+    {
+        rigidbody2d.velocity = motionVector * speed;
+    }
+}
+
+/*
+ * using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -14,6 +76,8 @@ public class Movement : MonoBehaviour
 
     // get input from player
     // apply movement to sprite
+
+
     
     private void Update()
     {
@@ -40,8 +104,8 @@ public class Movement : MonoBehaviour
             {
                 animator.SetBool("isMoving", true);
 
-                animator.SetFloat("Horizontal", direction.x);
-                animator.SetFloat("Vertical", direction.y);
+                animator.SetFloat("horizontal", direction.x);
+                animator.SetFloat("vertical", direction.y);
             }
             else
             {
@@ -50,3 +114,4 @@ public class Movement : MonoBehaviour
         }
     }
 }
+ */

@@ -12,8 +12,9 @@ public class GameManager : MonoBehaviour
         player = FindObjectOfType<Player>();
     }
 
+    public Player player;
     public ItemContainer inventoryContainer;
     public ItemManager dragAndDrop;
-
-    public Player player;
+    public DayTimeController timeController;
+    public DialogueSystem dialogueSystem;
 }

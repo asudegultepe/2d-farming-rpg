@@ -10,9 +10,4 @@ public class Player : MonoBehaviour
     {
         inventory = GetComponent<InventoryManager>();
     }
-
-    private void Update()
-    {
-        
-    }
 }
