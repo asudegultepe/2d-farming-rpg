@@ -7,7 +7,9 @@ using UnityEngine;
 public class Movement : MonoBehaviour
 {
     Rigidbody2D rigidbody2d;
-    [SerializeField] float speed;
+    float speed;
+    [SerializeField] float walkSpeed = 4;
+    [SerializeField] float sprintSpeed = 6;
 
     Vector2 motionVector;
     public Vector2 lastMotionVector;
@@ -45,6 +47,14 @@ public class Movement : MonoBehaviour
 
             animator.SetFloat("lastHorizontal", horizontal);
             animator.SetFloat("lastVertical", vertical);
+        }
+
+        if (Input.GetKey(KeyCode.LeftShift))
+        {
+            speed = sprintSpeed;
+        } else
+        {
+            speed = walkSpeed;
         }
     }
 
