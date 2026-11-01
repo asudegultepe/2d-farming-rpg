@@ -36,7 +36,7 @@ public class Movement : MonoBehaviour
         animator.SetFloat("vertical", vertical);
 
         isMoving = horizontal != 0 || vertical != 0;
-        animator.SetBool("isMoving", true);
+        animator.SetBool("isMoving", isMoving);
 
         if (horizontal != 0 || vertical != 0)
         {
