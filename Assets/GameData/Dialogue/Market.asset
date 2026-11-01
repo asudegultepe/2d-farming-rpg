@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2404b5e0d77914e47b42a02b94434b89, type: 3}
+  m_Name: Market
+  m_EditorClassIdentifier: 
+  line:
+  - Hello! You must be the new owner of that land.
+  - We've been waiting for years for someone who can clean that place up.
+  - We even called the President.
+  - Weird stuff happening there... Be careful!
+  - Anyways, I'm the owner of this shop.
+  - 'My name is Josh. '
+  - Let me know if you need anything.
+  - ' I''ll be here between 10am-5pm.'
+  actor: {fileID: 11400000, guid: 38511b35b6ccd4b45807167e69fe577d, type: 2}

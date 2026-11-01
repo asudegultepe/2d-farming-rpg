@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0a7ad843835fc1145b0ecccbf48493e5, type: 3}
+  m_Name: Seeds
+  m_EditorClassIdentifier: 
+  itemName: Turnip Seed
+  stackable: 1
+  icon: {fileID: -579962745, guid: 976880cd26eb53d4180a833910a6fa86, type: 3}
+  onAction: {fileID: 0}
+  onTileMapAction: {fileID: 11400000, guid: 9a5875a32c410594cabae8546dd30f25, type: 2}
+  onItemUsed: {fileID: 11400000, guid: 9a5875a32c410594cabae8546dd30f25, type: 2}
+  crop: {fileID: 11400000, guid: bfddb60fc0e9715409640590e3153b2b, type: 2}

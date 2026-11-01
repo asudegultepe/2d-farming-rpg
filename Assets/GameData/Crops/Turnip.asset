@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 18f70a7d3e231814ebb8c11e898551ab, type: 3}
+  m_Name: Turnip
+  m_EditorClassIdentifier: 
+  timeToGrow: 22
+  yield: {fileID: 11400000, guid: 7e940dd07d57122459c2bfd9ebfbf40b, type: 2}
+  count: 5
+  sprites:
+  - {fileID: -2136382662, guid: 976880cd26eb53d4180a833910a6fa86, type: 3}
+  - {fileID: 990517810, guid: 976880cd26eb53d4180a833910a6fa86, type: 3}
+  - {fileID: -807444587, guid: 976880cd26eb53d4180a833910a6fa86, type: 3}
+  - {fileID: 762169797, guid: 976880cd26eb53d4180a833910a6fa86, type: 3}
+  - {fileID: -584582807, guid: 976880cd26eb53d4180a833910a6fa86, type: 3}
+  growthStageTime: 04000000070000000d0000001400000016000000

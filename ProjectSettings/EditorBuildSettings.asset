@@ -11,4 +11,10 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/HouseInterior.unity
     guid: 92cd77490d001464b9ceee4040eccdf8
+  - enabled: 1
+    path: Assets/Scenes/Seaside.unity
+    guid: 0e5d434594f71b246a7b8b0d9c26d6e0
+  - enabled: 1
+    path: Assets/Scenes/Town.unity
+    guid: 29a81f9af891f314e860a5e37bed70f2
   m_configObjects: {}
