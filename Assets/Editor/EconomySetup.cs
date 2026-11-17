@@ -5,8 +5,8 @@ using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 
-// One-click scene setup for the economy: money label, notification label,
-// shop panel, shipping bin and shopkeeper. Every step supports Undo.
+// One-click scene setup for the economy: notification label, shop panel,
+// shipping bin and shopkeeper. Every step supports Undo.
 public static class EconomySetup
 {
     const string ChestSpritePath = "Assets/Sprites/chest2.png";
@@ -24,16 +24,20 @@ public static class EconomySetup
             return;
         }
 
-        if (Object.FindObjectOfType<MoneyDisplay>(true) == null)
+        // Find returns the first canvas, which may not be the UI one, so prefer the crafting panel's
+        for (Transform t = recipePanel.transform; t != null; t = t.parent)
         {
-            TextMeshProUGUI money = CreateLabel("Money", canvas.transform, new Vector2(1f, 1f), new Vector2(-20f, -20f), TextAlignmentOptions.TopRight);
-            money.text = "100g";
-            Undo.AddComponent<MoneyDisplay>(money.gameObject);
+            Canvas parentCanvas = t.GetComponent<Canvas>();
+            if (parentCanvas != null && parentCanvas.isRootCanvas)
+            {
+                canvas = parentCanvas;
+            }
         }
 
+        // gold is shown by the HUD (Tools/Setup/HUD)
         if (Object.FindObjectOfType<Notification>(true) == null)
         {
-            TextMeshProUGUI label = CreateLabel("Notification", canvas.transform, new Vector2(0.5f, 0f), new Vector2(0f, 140f), TextAlignmentOptions.Bottom);
+            TextMeshProUGUI label = CreateLabel("Notification", canvas.transform, new Vector2(0.5f, 0f), new Vector2(0f, 230f), TextAlignmentOptions.Bottom);
             label.rectTransform.sizeDelta = new Vector2(800f, 60f);
             Undo.AddComponent<CanvasGroup>(label.gameObject);
             Undo.AddComponent<Notification>(label.gameObject);

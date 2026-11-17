@@ -7,6 +7,9 @@ using UnityEngine;
 [RequireComponent(typeof(TextMeshProUGUI))]
 public class MoneyDisplay : MonoBehaviour
 {
+    [Tooltip("Leave empty when a coin icon is shown next to the label")]
+    [SerializeField] string suffix = "g";
+
     TextMeshProUGUI text;
 
     private void Awake()
@@ -31,6 +34,7 @@ public class MoneyDisplay : MonoBehaviour
 
     void UpdateText(int money)
     {
-        text.text = money + "g";
+        // 1,250 instead of 1250
+        text.text = money.ToString("N0", System.Globalization.CultureInfo.InvariantCulture) + suffix;
     }
 }

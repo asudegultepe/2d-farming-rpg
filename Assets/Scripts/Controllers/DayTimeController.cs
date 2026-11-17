@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 using TMPro;
 using UnityEngine.Rendering.Universal;
 
@@ -9,6 +10,10 @@ public class DayTimeController : MonoBehaviour
 {
     const float secondsInDay = 86400f;
     const float phaseLenght = 3600f; //15 min chunk of time
+
+    public const int daysInSeason = 28;
+    static readonly string[] weekDays = { "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun" };
+    static readonly string[] seasonNames = { "Spring", "Summer", "Fall", "Winter" };
 
     [SerializeField] Color nightLightColor;
     [SerializeField] AnimationCurve nightTimeCurve;
@@ -23,6 +28,31 @@ public class DayTimeController : MonoBehaviour
     [SerializeField] Light2D globalLight;
     public int days = 0;
 
+    [Header("Calendar HUD (optional)")]
+    [SerializeField] TextMeshProUGUI seasonText;
+    [SerializeField] Image seasonIcon;
+    [Tooltip("Spring, Summer, Fall, Winter")]
+    [SerializeField] Sprite[] seasonIcons;
+    [SerializeField] RectTransform dayProgressFill;
+    float dayProgressWidth;
+    int shownDay = -1;
+
+    // Days are counted from 0; the calendar starts on Spring 1, Year 1
+    public int Season
+    {
+        get { return days / daysInSeason % 4; }
+    }
+
+    public int DayOfSeason
+    {
+        get { return days % daysInSeason + 1; }
+    }
+
+    public int Year
+    {
+        get { return days / (daysInSeason * 4) + 1; }
+    }
+
     List<TimeAgent> agents;
 
     public Action onNextDay;
@@ -36,6 +66,12 @@ public class DayTimeController : MonoBehaviour
     private void Awake()
     {
         agents = new List<TimeAgent>();
+
+        // the fill is laid out at full width, shrink it from there
+        if (dayProgressFill != null)
+        {
+            dayProgressWidth = dayProgressFill.sizeDelta.x;
+        }
     }
 
     private void Start()
@@ -69,7 +105,14 @@ public class DayTimeController : MonoBehaviour
 
         TimeValueCalculation();
         DayLight();
-        dayText.text = "Day " + days;
+        DayProgress();
+
+        // days can also be changed from outside (loading a save), so compare instead of using NextDay
+        if (shownDay != days)
+        {
+            shownDay = days;
+            UpdateCalendar();
+        }
 
         if (time > secondsInDay)
         {
@@ -84,6 +127,30 @@ public class DayTimeController : MonoBehaviour
         int hh = (int)Hours;
         int mm = (int)Minutes;
         text.text = hh.ToString("00") + ":" + mm.ToString("00");
+    }
+
+    private void UpdateCalendar()
+    {
+        dayText.text = weekDays[days % weekDays.Length] + " " + DayOfSeason;
+
+        if (seasonText != null)
+        {
+            seasonText.text = seasonNames[Season] + " · Year " + Year;
+        }
+
+        if (seasonIcon != null && seasonIcons != null && Season < seasonIcons.Length)
+        {
+            seasonIcon.sprite = seasonIcons[Season];
+        }
+    }
+
+    private void DayProgress()
+    {
+        if (dayProgressFill == null) { return; }
+
+        Vector2 size = dayProgressFill.sizeDelta;
+        size.x = dayProgressWidth * Mathf.Clamp01(time / secondsInDay);
+        dayProgressFill.sizeDelta = size;
     }
 
     private void DayLight()
