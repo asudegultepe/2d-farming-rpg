@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -23,6 +24,14 @@ public class DayTimeController : MonoBehaviour
     public int days = 0;
 
     List<TimeAgent> agents;
+
+    public Action onNextDay;
+
+    public float CurrentTime
+    {
+        get { return time; }
+        set { time = value; }
+    }
 
     private void Awake()
     {
@@ -105,5 +114,6 @@ public class DayTimeController : MonoBehaviour
     {
         time = 0;
         days += 1;
+        onNextDay?.Invoke();
     }
 }

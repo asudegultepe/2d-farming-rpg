@@ -10,6 +10,11 @@ public class GameManager : MonoBehaviour
     {
         instance = this;
         player = FindObjectOfType<Player>();
+
+        if (SaveManager.instance == null)
+        {
+            gameObject.AddComponent<SaveManager>();
+        }
     }
 
     public Player player;

@@ -40,6 +40,25 @@ public class ResourceNode : ToolHit
         }
     }
 
+    private void Start()
+    {
+        if (SaveManager.instance != null && SaveManager.instance.IsNodeDestroyed(NodeId))
+        {
+            Destroy(gameObject);
+        }
+    }
+
+    // Nodes are placed by hand in scenes, so scene + position is a stable id
+    string NodeId
+    {
+        get
+        {
+            Vector3 p = transform.position;
+            System.Globalization.CultureInfo culture = System.Globalization.CultureInfo.InvariantCulture;
+            return gameObject.scene.name + ":" + p.x.ToString("F2", culture) + "," + p.y.ToString("F2", culture);
+        }
+    }
+
     public override void Hit()
     {
         if (isBroken) { return; }
@@ -84,6 +103,11 @@ public class ResourceNode : ToolHit
             StopCoroutine(shakeRoutine);
         }
         transform.position = originalPosition;
+
+        if (SaveManager.instance != null)
+        {
+            SaveManager.instance.RegisterDestroyedNode(NodeId);
+        }
 
         DropItems();
         StartCoroutine(BreakRoutine());

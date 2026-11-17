@@ -19,6 +19,11 @@ public class GameSceneManager : MonoBehaviour
     AsyncOperation unload;
     AsyncOperation load;
 
+    public string CurrentScene
+    {
+        get { return currentScene; }
+    }
+
     void Start()
     {
         currentScene = SceneManager.GetActiveScene().name;
@@ -55,6 +60,11 @@ public class GameSceneManager : MonoBehaviour
         unload = SceneManager.UnloadSceneAsync(currentScene);
         currentScene = to;
 
+        WarpPlayer(targetPosition);
+    }
+
+    public void WarpPlayer(Vector3 targetPosition)
+    {
         Transform playerTransform = GameManager.instance.player.transform;
 
         CinemachineBrain currentCamera = Camera.main.GetComponent<CinemachineBrain>();
