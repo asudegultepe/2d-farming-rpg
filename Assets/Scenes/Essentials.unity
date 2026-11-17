@@ -10034,6 +10034,7 @@ GameObject:
   - component: {fileID: 693199663}
   - component: {fileID: 693199664}
   - component: {fileID: 693199668}
+  - component: {fileID: 693199669}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -10281,6 +10282,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   inventory: {fileID: 11400000, guid: 8d0bc801a5eb6c046a64c569d5267395, type: 2}
+--- !u!114 &693199669
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 693199656}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7f2c663467d61d742b86c109e238b9df, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &711019581
 GameObject:
   m_ObjectHideFlags: 0
@@ -11384,7 +11397,7 @@ MonoBehaviour:
   m_TargetMovementOnly: 1
   m_ScreenX: 0.5
   m_ScreenY: 0.5
-  m_CameraDistance: 4
+  m_CameraDistance: 20
   m_DeadZoneWidth: 0
   m_DeadZoneHeight: 0
   m_DeadZoneDepth: 0

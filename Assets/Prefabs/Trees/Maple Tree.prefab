@@ -14,6 +14,7 @@ GameObject:
   - component: {fileID: 6757410821932098356}
   - component: {fileID: 7361025617983894889}
   - component: {fileID: 1852359948629252836}
+  - component: {fileID: 3862106367077611143}
   m_Layer: 0
   m_Name: Maple Tree
   m_TagString: Untagged
@@ -164,3 +165,16 @@ MonoBehaviour:
   count: 1
   spread: 2
   probability: 0.5
+--- !u!114 &3862106367077611143
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6757410821932098360}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7f2c663467d61d742b86c109e238b9df, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  groundSkirt: 1
