@@ -526,12 +526,15 @@ public static class SortingSetup
     // The imported texture isn't readable, so read the source image instead
     static Texture2D LoadSheet(string path)
     {
-        if (sheets.TryGetValue(path, out Texture2D sheet)) { return sheet; }
+        // a cached null means the file couldn't be read; a destroyed texture is read again
+        if (sheets.TryGetValue(path, out Texture2D sheet) && (sheet != null || ReferenceEquals(sheet, null))) { return sheet; }
 
         sheet = null;
         if (string.IsNullOrEmpty(path) == false && System.IO.File.Exists(path))
         {
             sheet = new Texture2D(2, 2);
+            // opening a scene unloads unused assets, which would destroy the cached texture
+            sheet.hideFlags = HideFlags.HideAndDontSave;
             if (sheet.LoadImage(System.IO.File.ReadAllBytes(path)) == false)
             {
                 Object.DestroyImmediate(sheet);
