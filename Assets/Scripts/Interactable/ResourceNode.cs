@@ -5,7 +5,6 @@ using UnityEngine;
 [RequireComponent(typeof(BoxCollider2D))]
 public class ResourceNode : ToolHit
 {
-    [SerializeField] GameObject pickUpDrop;
     [SerializeField] float spread = 0.7f;
 
     [SerializeField] Item item;
