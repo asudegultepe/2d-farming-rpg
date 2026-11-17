@@ -13,7 +13,7 @@ using UnityEngine.Tilemaps;
 //   Default  - ground tilemaps and flat props (carpets, bridges...), unchanged
 //   Marker   - the tile selection marker, above the ground but under characters
 //   World    - player, NPCs, trees, rocks, buildings, crops... all at order 0 and
-//              sorted by their Y position (the 2D renderer's transparency sort axis)
+//              sorted by where they stand (see Sort By Feet below and SortByFeet)
 //   Overhead - the interaction highlight that floats above objects
 // Renderers already on a layer other than Default are left alone, so hand-made
 // changes survive running it again.
@@ -310,5 +310,152 @@ public static class SortingSetup
             if (name.Contains(keyword)) { return true; }
         }
         return false;
+    }
+
+    // ---------- Sort by feet ----------
+
+    // Turns on sorting along (0, 1, 1) in the 2D renderer and sets every World object's z
+    // so it sorts by its bottom edge (see SortByFeet). Safe to run again.
+    [MenuItem("Tools/Setup/Sort By Feet")]
+    public static void SortByFeetSetup()
+    {
+        int world = SortingLayer.NameToID(WorldLayer);
+        if (world == 0)
+        {
+            EditorUtility.DisplayDialog("Sort By Feet", "Run Tools/Setup/Sorting Layers first.", "OK");
+            return;
+        }
+
+        if (EditorUtility.DisplayDialog("Sort By Feet",
+            "This changes the 2D renderer's sort axis, adds SortByFeet to the prefabs in " + PrefabFolder +
+            " and sets the z position of objects in every scene in " + SceneFolder + ", then saves them.", "Run", "Cancel") == false)
+        {
+            return;
+        }
+
+        if (EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo() == false) { return; }
+
+        SetSortAxis();
+
+        StringBuilder report = new StringBuilder("Sort by feet done.\n");
+        SceneSetup[] openScenes = EditorSceneManager.GetSceneManagerSetup();
+
+        foreach (string guid in AssetDatabase.FindAssets("t:Prefab", new[] { PrefabFolder }))
+        {
+            string path = AssetDatabase.GUIDToAssetPath(guid);
+            GameObject root = PrefabUtility.LoadPrefabContents(path);
+
+            // prefabs get spawned, moved or change sprite at runtime, so they update themselves
+            if (HasWorldSprite(root, world) && root.GetComponent<SortByFeet>() == null)
+            {
+                root.AddComponent<SortByFeet>();
+                PrefabUtility.SaveAsPrefabAsset(root, path);
+                report.AppendLine("  SortByFeet added to " + path);
+            }
+            PrefabUtility.UnloadPrefabContents(root);
+        }
+
+        foreach (string guid in AssetDatabase.FindAssets("t:Scene", new[] { SceneFolder }))
+        {
+            string path = AssetDatabase.GUIDToAssetPath(guid);
+            Scene scene = EditorSceneManager.OpenScene(path, OpenSceneMode.Single);
+
+            int baked = 0;
+            foreach (GameObject root in scene.GetRootGameObjects())
+            {
+                baked += BakeFeetZ(root, world);
+            }
+
+            if (baked > 0)
+            {
+                EditorSceneManager.SaveScene(scene);
+                report.AppendLine("  " + path + ": " + baked + " objects");
+            }
+        }
+
+        if (openScenes.Length > 0)
+        {
+            EditorSceneManager.RestoreSceneManagerSetup(openScenes);
+        }
+
+        Debug.Log(report.ToString());
+    }
+
+    static void SetSortAxis()
+    {
+        foreach (string guid in AssetDatabase.FindAssets("t:Renderer2DData"))
+        {
+            Object rendererData = AssetDatabase.LoadAssetAtPath<Object>(AssetDatabase.GUIDToAssetPath(guid));
+            SerializedObject data = new SerializedObject(rendererData);
+            data.FindProperty("m_TransparencySortMode").intValue = (int)TransparencySortMode.CustomAxis;
+            data.FindProperty("m_TransparencySortAxis").vector3Value = new Vector3(0f, 1f, 1f);
+            data.ApplyModifiedPropertiesWithoutUndo();
+            EditorUtility.SetDirty(rendererData);
+        }
+        AssetDatabase.SaveAssets();
+    }
+
+    static bool HasWorldSprite(GameObject root, int world)
+    {
+        foreach (SpriteRenderer sprite in root.GetComponentsInChildren<SpriteRenderer>(true))
+        {
+            if (sprite.sortingLayerID == world) { return true; }
+        }
+        return false;
+    }
+
+    // Static objects get a fixed z; anything with SortByFeet (player, prefab instances) does it at runtime
+    static int BakeFeetZ(GameObject root, int world)
+    {
+        int baked = 0;
+
+        foreach (Player player in root.GetComponentsInChildren<Player>(true))
+        {
+            if (player.GetComponent<SortByFeet>() == null)
+            {
+                player.gameObject.AddComponent<SortByFeet>();
+                baked++;
+            }
+        }
+
+        foreach (SpriteRenderer sprite in root.GetComponentsInChildren<SpriteRenderer>(true))
+        {
+            if (sprite.sortingLayerID != world || sprite.GetComponentInParent<SortByFeet>(true) != null) { continue; }
+
+            // an object made of several sprites is moved as a whole, from its sorting group
+            SortingGroup group = sprite.GetComponentInParent<SortingGroup>(true);
+            Transform target = group != null ? group.transform : sprite.transform;
+            if (group != null && sprite.transform != target && target.GetComponent<SpriteRenderer>() != null) { continue; }
+
+            float z = SortByFeet.FeetZ(target, group, target.GetComponentsInChildren<SpriteRenderer>(true));
+            if (SetZ(target, z)) { baked++; }
+        }
+
+        // tiles sort by their cell center, move them down to the cell's bottom edge
+        foreach (TilemapRenderer tilemap in root.GetComponentsInChildren<TilemapRenderer>(true))
+        {
+            if (tilemap.sortingLayerID != world) { continue; }
+
+            Grid grid = tilemap.GetComponentInParent<Grid>();
+            float halfCell = grid != null ? grid.cellSize.y * tilemap.transform.lossyScale.y / 2f : 0.5f;
+            if (SetZ(tilemap.transform, -halfCell)) { baked++; }
+        }
+
+        return baked;
+    }
+
+    static bool SetZ(Transform target, float z)
+    {
+        Vector3 position = target.position;
+        if (Mathf.Approximately(position.z, z)) { return false; }
+
+        position.z = z;
+        target.position = position;
+        if (PrefabUtility.IsPartOfPrefabInstance(target))
+        {
+            PrefabUtility.RecordPrefabInstancePropertyModifications(target);
+        }
+        EditorUtility.SetDirty(target);
+        return true;
     }
 }
