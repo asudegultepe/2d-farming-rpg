@@ -4,7 +4,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
-public class TilemapCropsManager : TimeAgent
+// Draws a crop field. Growth itself happens in CropsContainer, driven by CropsManager.
+public class TilemapCropsManager : MonoBehaviour
 {
     [SerializeField] TileBase plowed;
     [SerializeField] TileBase seeded;
@@ -18,8 +19,7 @@ public class TilemapCropsManager : TimeAgent
     {
         GameManager.instance.GetComponent<CropsManager>().cropsManager = this;
         targetTilemap = GetComponent<Tilemap>();
-        onTimeTick += Tick;
-        Init();
+        container.onTileChanged += VisualizeTile;
         VisualizeMap();
     }
 
@@ -33,44 +33,11 @@ public class TilemapCropsManager : TimeAgent
 
     private void OnDestroy()
     {
+        container.onTileChanged -= VisualizeTile;
+
         for(int i = 0; i < container.crops.Count; i++)
         {
             container.crops[i].renderer = null;
-        }
-    }
-
-    public void Tick()
-    {
-        if (targetTilemap == null) { return; }
-
-        foreach (CropTile cropTile in container.crops)
-        {
-            if (cropTile.crop == null) { continue; }
-
-            cropTile.damage += 0.02f;
-
-            if (cropTile.damage > 1f)
-            {
-                cropTile.Harvested();
-                targetTilemap.SetTile(cropTile.position, plowed);
-                continue;
-            }
-
-            if (cropTile.Complete)
-            {
-                Debug.Log("I'm done growing.");
-                continue;
-            }
-
-            cropTile.growTimer += 1;
-
-            if (cropTile.growTimer >= cropTile.crop.growthStageTime[cropTile.growStage])
-            {
-                cropTile.renderer.gameObject.SetActive(true);
-                cropTile.renderer.sprite = cropTile.crop.sprites[cropTile.growStage];
-
-                cropTile.growStage += 1;
-            }
         }
     }
 

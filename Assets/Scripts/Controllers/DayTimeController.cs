@@ -56,6 +56,8 @@ public class DayTimeController : MonoBehaviour
     List<TimeAgent> agents;
 
     public Action onNextDay;
+    // Once per in-game hour, for systems outside the loaded scenes (crop growth)
+    public Action onHourPassed;
 
     public float CurrentTime
     {
@@ -175,6 +177,8 @@ public class DayTimeController : MonoBehaviour
 
     private void TickAgents()
     {
+        onHourPassed?.Invoke();
+
         for (int i = 0; i < agents.Count; i++)
         {
             agents[i].Invoke();
