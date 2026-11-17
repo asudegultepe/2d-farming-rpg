@@ -108,6 +108,7 @@ public class SaveManager : MonoBehaviour
         data.days = GameManager.instance.timeController.days;
         data.time = GameManager.instance.timeController.CurrentTime;
         data.money = GameManager.instance.wallet.Money;
+        data.energy = GameManager.instance.energy.Current;
 
         foreach (ItemSlot slot in GameManager.instance.inventoryContainer.slots)
         {
@@ -167,6 +168,10 @@ public class SaveManager : MonoBehaviour
         if (data.money >= 0)
         {
             GameManager.instance.wallet.Money = data.money;
+        }
+        if (data.energy >= 0)
+        {
+            GameManager.instance.energy.Current = data.energy;
         }
         destroyedNodes = new HashSet<string>(data.destroyedNodes);
         SavedScene = data.sceneName;

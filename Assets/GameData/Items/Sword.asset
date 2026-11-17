@@ -18,3 +18,4 @@ MonoBehaviour:
   onAction: {fileID: 0}
   sellPrice: 0
   buyPrice: 250
+  energyCost: 2

@@ -14,6 +14,8 @@ public class SaveData
 
     // -1 = missing (save written before money existed), keep the starting gold
     public int money = -1;
+    // -1 = missing, start rested
+    public int energy = -1;
 
     public List<SlotSaveData> inventory = new List<SlotSaveData>();
     public List<CropsContainerSaveData> cropsContainers = new List<CropsContainerSaveData>();

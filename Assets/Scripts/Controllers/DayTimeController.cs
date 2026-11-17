@@ -169,11 +169,15 @@ public class DayTimeController : MonoBehaviour
         if (oldPhase != currentPhase)
         {
             oldPhase = currentPhase;
+            TickAgents();
+        }
+    }
 
-            for (int i = 0; i < agents.Count; i++)
-            {
-                agents[i].Invoke();
-            }
+    private void TickAgents()
+    {
+        for (int i = 0; i < agents.Count; i++)
+        {
+            agents[i].Invoke();
         }
     }
 
@@ -182,5 +186,29 @@ public class DayTimeController : MonoBehaviour
         time = 0;
         days += 1;
         onNextDay?.Invoke();
+    }
+
+    // Sleeping jumps to the next morning. Every skipped hour still ticks the
+    // time agents, so crops grow as if the night had passed normally.
+    public void SkipToMorning()
+    {
+        // after midnight the day has already changed, so wake up the same day
+        bool afterMidnight = time < startAtTime;
+        float wakeUp = afterMidnight ? startAtTime : secondsInDay + startAtTime;
+        int hoursSkipped = (int)(wakeUp / phaseLenght) - (int)(time / phaseLenght);
+
+        for (int i = 0; i < hoursSkipped; i++)
+        {
+            TickAgents();
+        }
+
+        time = startAtTime;
+        oldPhase = (int)(time / phaseLenght);
+
+        if (afterMidnight == false)
+        {
+            days += 1;
+            onNextDay?.Invoke();
+        }
     }
 }

@@ -26,6 +26,11 @@ public class GameSceneManager : MonoBehaviour
         get { return currentScene; }
     }
 
+    public ScreenTint ScreenTint
+    {
+        get { return screenTint; }
+    }
+
     void Start()
     {
         currentScene = SceneManager.GetActiveScene().name;

@@ -18,3 +18,4 @@ MonoBehaviour:
   onAction: {fileID: 11400000, guid: 335f5775adda69140bb41b4a58cd8493, type: 2}
   sellPrice: 0
   buyPrice: 150
+  energyCost: 4

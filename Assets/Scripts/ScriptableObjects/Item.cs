@@ -18,4 +18,7 @@ public class Item : ScriptableObject
     [Min(0)] public int sellPrice;
     [Tooltip("Gold a shop charges for one of this item.")]
     [Min(0)] public int buyPrice;
+
+    [Tooltip("Energy spent each time the item is used successfully.")]
+    [Min(0)] public int energyCost;
 }

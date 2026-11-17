@@ -9,8 +9,8 @@ using UnityEngine.UI;
 using static UIBuild;
 
 // Builds the HUD from the sprites in Assets/Sprites/UI/HUD into the existing Essentials canvas
-// and wires it to the game: clock and calendar (DayTimeController), gold (MoneyDisplay)
-// and the toolbar (ItemToolbarPanel). Running it again replaces the previous HUD.
+// and wires it to the game: clock and calendar (DayTimeController), gold (MoneyDisplay),
+// energy (EnergyDisplay) and the toolbar (ItemToolbarPanel). Running it again replaces the previous HUD.
 public static class HudBuilder
 {
     public const string RootName = "HUD";
@@ -67,7 +67,7 @@ public static class HudBuilder
         BuildMenuButtons(info);
 
         RectTransform hotbar = BuildHotbar(root, gameManager.inventoryContainer, toolbarController);
-        BuildVitalsPanel(root);
+        BuildEnergyPanel(root);
 
         inventoryManagerData.FindProperty("toolbarPanel").objectReferenceValue = hotbar.gameObject;
         inventoryManagerData.FindProperty("dayTime").objectReferenceValue = info.gameObject;
@@ -206,21 +206,29 @@ public static class HudBuilder
         return button;
     }
 
-    // Health and energy, hidden until those systems exist
-    static void BuildVitalsPanel(Transform parent)
+    // Energy bar in ten segments. The design also has hearts, left out until there's a health system.
+    static void BuildEnergyPanel(Transform parent)
     {
-        RectTransform vitals = Panel("VitalsPanel", parent, BottomRight, new Vector2(-24f, 24f), new Vector2(183f, 162f));
-        Txt("HealthLabel", vitals, "Health", 18f, 18f, 147f, 18f, 18f, false, TextSoft, TextAlignmentOptions.Left);
-        for (int i = 0; i < 5; i++)
-        {
-            Img("Heart" + (i + 1), vitals, "heart_full", 18f + i * 30f, 42f, 27f, 27f);
-        }
-        Txt("EnergyLabel", vitals, "Energy", 18f, 78f, 147f, 18f, 18f, false, TextSoft, TextAlignmentOptions.Left);
+        RectTransform panel = Panel("EnergyPanel", parent, BottomRight, new Vector2(-24f, 24f), new Vector2(183f, 96f));
+        Txt("EnergyLabel", panel, "Energy", 18f, 18f, 147f, 18f, 18f, false, TextSoft, TextAlignmentOptions.Left);
+
+        List<Image> segments = new List<Image>();
         for (int i = 0; i < 10; i++)
         {
-            Img("Energy" + (i + 1), vitals, "energy_full", 18f + i * 15f, 102f, 12f, 36f);
+            segments.Add(Img("Segment" + (i + 1), panel, "energy_full", 18f + i * 15f, 42f, 12f, 36f).GetComponent<Image>());
         }
-        vitals.gameObject.SetActive(false);
+
+        EnergyDisplay display = panel.gameObject.AddComponent<EnergyDisplay>();
+        SerializedObject data = new SerializedObject(display);
+        data.FindProperty("full").objectReferenceValue = Load("energy_full");
+        data.FindProperty("empty").objectReferenceValue = Load("energy_empty");
+        SerializedProperty list = data.FindProperty("segments");
+        list.arraySize = segments.Count;
+        for (int i = 0; i < segments.Count; i++)
+        {
+            list.GetArrayElementAtIndex(i).objectReferenceValue = segments[i];
+        }
+        data.ApplyModifiedPropertiesWithoutUndo();
     }
 
     // ---------- Scene helpers ----------

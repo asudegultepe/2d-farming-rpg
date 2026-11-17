@@ -11,11 +11,17 @@ public class GameManager : MonoBehaviour
         instance = this;
         player = FindObjectOfType<Player>();
 
-        // the wallet has to exist before SaveManager loads the saved gold into it
+        // these have to exist before SaveManager loads the saved values into them
         wallet = GetComponent<Wallet>();
         if (wallet == null)
         {
             wallet = gameObject.AddComponent<Wallet>();
+        }
+
+        energy = GetComponent<Energy>();
+        if (energy == null)
+        {
+            energy = gameObject.AddComponent<Energy>();
         }
 
         if (SaveManager.instance == null)
@@ -31,4 +37,5 @@ public class GameManager : MonoBehaviour
     public DialogueSystem dialogueSystem;
     public ShopPanel shopPanel;
     [HideInInspector] public Wallet wallet;
+    [HideInInspector] public Energy energy;
 }

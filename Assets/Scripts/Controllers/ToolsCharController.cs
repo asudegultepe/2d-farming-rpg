@@ -73,6 +73,8 @@ public class ToolsCharController : MonoBehaviour
         Item item = toolbarController.GetItem;
         if(item == null) { return false; }
         if(item.onAction == null) { return false; }
+        // handled, so the click doesn't fall through to the grid action either
+        if (HasEnergyFor(item) == false) { return true; }
 
         animator.SetTrigger("act");
 
@@ -84,9 +86,18 @@ public class ToolsCharController : MonoBehaviour
             {
                 item.onItemUsed.OnItemUsed(item, GameManager.instance.inventoryContainer);
             }
+            GameManager.instance.energy.Use(item.energyCost);
         }
 
         return complete;
+    }
+
+    bool HasEnergyFor(Item item)
+    {
+        if (GameManager.instance.energy.Has(item.energyCost)) { return true; }
+
+        Notification.Show("You're too tired. Get some sleep.");
+        return false;
     }
 
     private void UseToolGrid()
@@ -100,6 +111,7 @@ public class ToolsCharController : MonoBehaviour
                 return; 
             }
             if(item.onTileMapAction == null) { return; }
+            if (HasEnergyFor(item) == false) { return; }
 
             animator.SetTrigger("act");
             bool complete = item.onTileMapAction.OnApplyToTileMap(selectedTilePosition, tileManager, item);
@@ -110,6 +122,7 @@ public class ToolsCharController : MonoBehaviour
                 {
                     item.onItemUsed.OnItemUsed(item, GameManager.instance.inventoryContainer);
                 }
+                GameManager.instance.energy.Use(item.energyCost);
             }
         }
     }
