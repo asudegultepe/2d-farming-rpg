@@ -72,9 +72,9 @@ SpriteRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
-  m_SortingOrder: 1
+  m_SortingLayerID: 647926845
+  m_SortingLayer: 2
+  m_SortingOrder: 0
   m_Sprite: {fileID: 1504856308, guid: dd3166045df11924cb442d4ba9be1d3f, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
@@ -130,3 +130,7 @@ MonoBehaviour:
   itemCountInOneDrop: 1
   dropCount: 2
   nodeType: 2
+  hitsToBreak: 3
+  shakeDuration: 0.2
+  shakeStrength: 0.08
+  breakDuration: 0.6

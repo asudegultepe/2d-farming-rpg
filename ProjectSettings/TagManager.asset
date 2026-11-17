@@ -41,3 +41,12 @@ TagManager:
   - name: Default
     uniqueID: 0
     locked: 0
+  - name: Marker
+    uniqueID: 1126059598
+    locked: 0
+  - name: World
+    uniqueID: 647926845
+    locked: 0
+  - name: Overhead
+    uniqueID: 1635998594
+    locked: 0
