@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
+using Cinemachine;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -364,6 +365,7 @@ public static class SortingSetup
             foreach (GameObject root in scene.GetRootGameObjects())
             {
                 baked += BakeFeetZ(root, world);
+                baked += PullBackCameras(root);
             }
 
             if (baked > 0)
@@ -442,6 +444,27 @@ public static class SortingSetup
         }
 
         return baked;
+    }
+
+    // Tall sprites end up several units behind z = 0. The camera is orthographic, so its
+    // distance doesn't change the picture, but it has to stay in front of all of them.
+    const float MinCameraDistance = 20f;
+
+    static int PullBackCameras(GameObject root)
+    {
+        int changed = 0;
+
+        foreach (CinemachineVirtualCamera virtualCamera in root.GetComponentsInChildren<CinemachineVirtualCamera>(true))
+        {
+            CinemachineFramingTransposer transposer = virtualCamera.GetCinemachineComponent<CinemachineFramingTransposer>();
+            if (transposer == null || transposer.m_CameraDistance >= MinCameraDistance) { continue; }
+
+            transposer.m_CameraDistance = MinCameraDistance;
+            EditorUtility.SetDirty(transposer);
+            changed++;
+        }
+
+        return changed;
     }
 
     static bool SetZ(Transform target, float z)
