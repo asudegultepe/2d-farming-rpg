@@ -20,7 +20,13 @@ public class ItemPanel : MonoBehaviour
 
     private void OnEnable()
     {
+        if (inventory != null) { inventory.onChange += Show; }
         Show();
+    }
+
+    private void OnDisable()
+    {
+        if (inventory != null) { inventory.onChange -= Show; }
     }
 
     private void SetIndex()
@@ -33,6 +39,8 @@ public class ItemPanel : MonoBehaviour
 
     public virtual void Show()
     {
+        if (inventory == null) { return; }
+
         for (int i = 0; i < inventory.slots.Count && i < buttons.Count; i++)
         {
             if (inventory.slots[i].item == null)

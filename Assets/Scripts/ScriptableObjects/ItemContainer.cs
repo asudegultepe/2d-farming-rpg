@@ -33,6 +33,14 @@ public class ItemContainer : ScriptableObject
 {
     public List<ItemSlot> slots;
 
+    // Raised whenever the contents change, so UI panels can redraw themselves
+    [NonSerialized] public Action onChange;
+
+    public void NotifyChanged()
+    {
+        onChange?.Invoke();
+    }
+
     public void Add(Item item, int count = 1)
     {
         if (item.stackable == true)
@@ -62,6 +70,8 @@ public class ItemContainer : ScriptableObject
                 itemSlot.item = item;
             }
         }
+
+        NotifyChanged();
     }
 
     public void Remove(Item itemToRemove, int count = 1)
@@ -76,7 +86,7 @@ public class ItemContainer : ScriptableObject
             {
                 itemSlot.Clear();
             }
-        } 
+        }
         else
         {
             while (count > 0)
@@ -84,10 +94,19 @@ public class ItemContainer : ScriptableObject
                 count -= 1;
 
                 ItemSlot itemSlot = slots.Find(x => x.item == itemToRemove);
-                if (itemSlot == null) { return; }
+                if (itemSlot == null) { break; }
                 itemSlot.Clear();
             }
         }
+
+        NotifyChanged();
+    }
+
+    // True if the item fits, either on an existing stack or in an empty slot
+    internal bool CanAdd(Item item)
+    {
+        if (item.stackable && slots.Exists(x => x.item == item)) { return true; }
+        return CheckFreeSpace();
     }
 
     internal bool CheckFreeSpace()
@@ -109,7 +128,7 @@ public class ItemContainer : ScriptableObject
 
         if(itemSlot == null) { return false; }
 
-        if(checkingItem.item.stackable) { return itemSlot.count > checkingItem.count; }
+        if(checkingItem.item.stackable) { return itemSlot.count >= checkingItem.count; }
 
         return true;
     }

@@ -89,6 +89,7 @@ public class SaveManager : MonoBehaviour
 
         data.days = GameManager.instance.timeController.days;
         data.time = GameManager.instance.timeController.CurrentTime;
+        data.money = GameManager.instance.wallet.Money;
 
         foreach (ItemSlot slot in GameManager.instance.inventoryContainer.slots)
         {
@@ -141,6 +142,10 @@ public class SaveManager : MonoBehaviour
 
         LoadInventory(data);
         LoadCrops(data);
+        if (data.money >= 0)
+        {
+            GameManager.instance.wallet.Money = data.money;
+        }
         destroyedNodes = new HashSet<string>(data.destroyedNodes);
 
         StartCoroutine(LoadWorld(data));

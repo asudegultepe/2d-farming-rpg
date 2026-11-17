@@ -17,8 +17,26 @@ public class ToolbarController : MonoBehaviour
         }
     }
 
+    public ItemSlot GetSlot
+    {
+        get {
+            return GameManager.instance.inventoryContainer.slots[selectedTool];
+        }
+    }
+
     private void Update()
     {
+        // number keys 1-9 select a slot directly
+        for (int i = 0; i < toolbarSize && i < 9; i++)
+        {
+            if (Input.GetKeyDown(KeyCode.Alpha1 + i))
+            {
+                selectedTool = i;
+                onChange?.Invoke(selectedTool);
+                return;
+            }
+        }
+
         float delta = Input.mouseScrollDelta.y;
 
         if (delta != 0)
@@ -31,7 +49,7 @@ public class ToolbarController : MonoBehaviour
             else
             {
                 selectedTool -= 1;
-                selectedTool = (selectedTool <= 0 ? toolbarSize - 1 : selectedTool);
+                selectedTool = (selectedTool < 0 ? toolbarSize - 1 : selectedTool);
             }
             onChange?.Invoke(selectedTool);
         }

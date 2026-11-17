@@ -16,3 +16,5 @@ MonoBehaviour:
   stackable: 1
   icon: {fileID: -349890235, guid: 976880cd26eb53d4180a833910a6fa86, type: 3}
   onAction: {fileID: 0}
+  sellPrice: 20
+  buyPrice: 40

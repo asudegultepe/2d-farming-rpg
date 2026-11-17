@@ -28,10 +28,11 @@ public class Movement : MonoBehaviour
         float horizontal = Input.GetAxisRaw("Horizontal");
         float vertical = Input.GetAxisRaw("Vertical");
 
+        // normalized so walking diagonally isn't faster than walking straight
         motionVector = new Vector2(
             horizontal,
             vertical
-            );
+            ).normalized;
         animator.SetFloat("horizontal", horizontal);
         animator.SetFloat("vertical", vertical);
 
@@ -68,60 +69,3 @@ public class Movement : MonoBehaviour
         rigidbody2d.velocity = motionVector * speed;
     }
 }
-
-/*
- * using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-
-public class Movement : MonoBehaviour
-{
-    public float speed;
-
-    public Animator animator;
-
-    private Vector3 direction;
-
-    public Vector2 lastMotionVector;
-
-    // get input from player
-    // apply movement to sprite
-
-
-    
-    private void Update()
-    {
-        float horizontal = Input.GetAxisRaw("Horizontal");
-        float vertical = Input.GetAxisRaw("Vertical");
-
-        direction = new Vector3(horizontal, vertical);
-        lastMotionVector = new Vector2(horizontal, vertical).normalized;
-
-        AnimateMovement(direction);
-    }
-
-    private void FixedUpdate()
-    {
-        //move player
-        this.transform.position += direction.normalized * speed * Time.deltaTime;
-    }
-
-    void AnimateMovement(Vector3 direction)
-    {
-        if(animator != null)
-        {
-            if(direction.magnitude > 0) 
-            {
-                animator.SetBool("isMoving", true);
-
-                animator.SetFloat("horizontal", direction.x);
-                animator.SetFloat("vertical", direction.y);
-            }
-            else
-            {
-                animator.SetBool("isMoving", false);
-            }
-        }
-    }
-}
- */

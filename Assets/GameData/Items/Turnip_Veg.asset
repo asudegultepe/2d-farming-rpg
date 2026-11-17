@@ -12,10 +12,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0a7ad843835fc1145b0ecccbf48493e5, type: 3}
   m_Name: Turnip_Veg
   m_EditorClassIdentifier: 
-  itemName: Turnip Seed
+  itemName: Turnip
   stackable: 1
   icon: {fileID: -584582807, guid: 976880cd26eb53d4180a833910a6fa86, type: 3}
   onAction: {fileID: 0}
-  onTileMapAction: {fileID: 11400000, guid: 9a5875a32c410594cabae8546dd30f25, type: 2}
-  onItemUsed: {fileID: 11400000, guid: 9a5875a32c410594cabae8546dd30f25, type: 2}
-  crop: {fileID: 11400000, guid: bfddb60fc0e9715409640590e3153b2b, type: 2}
+  onTileMapAction: {fileID: 0}
+  onItemUsed: {fileID: 0}
+  crop: {fileID: 0}
+  sellPrice: 15
+  buyPrice: 0

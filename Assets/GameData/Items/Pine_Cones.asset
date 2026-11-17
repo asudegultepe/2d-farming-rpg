@@ -18,3 +18,5 @@ MonoBehaviour:
   onAction: {fileID: 0}
   onTileMapAction: {fileID: 11400000, guid: 9a5875a32c410594cabae8546dd30f25, type: 2}
   onItemUsed: {fileID: 11400000, guid: 9a5875a32c410594cabae8546dd30f25, type: 2}
+  sellPrice: 5
+  buyPrice: 0

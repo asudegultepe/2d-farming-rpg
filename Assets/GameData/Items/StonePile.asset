@@ -19,3 +19,5 @@ MonoBehaviour:
   onTileMapAction: {fileID: 0}
   onItemUsed: {fileID: 0}
   crop: {fileID: 0}
+  sellPrice: 12
+  buyPrice: 0

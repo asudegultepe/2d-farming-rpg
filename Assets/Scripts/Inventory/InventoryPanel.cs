@@ -8,6 +8,7 @@ public class InventoryPanel : ItemPanel
     public override void OnClick(int id)
     {
         GameManager.instance.dragAndDrop.OnClick(inventory.slots[id]);
-        Show();
+        // redraws this panel and the toolbar, which share the same container
+        inventory.NotifyChanged();
     }
 }

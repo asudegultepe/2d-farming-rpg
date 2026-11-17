@@ -10,7 +10,7 @@ public class Crafting : MonoBehaviour
     {
         if(inventory.CheckFreeSpace() == false)
         {
-            Debug.Log("Not enough space to fit the item after crafting.");
+            Notification.Show("Not enough space to fit the item after crafting.");
             return;
         }
 
@@ -18,7 +18,7 @@ public class Crafting : MonoBehaviour
         {
             if(inventory.CheckItem(recipe.elements[i]) == false)
             {
-                Debug.Log("Crafting recipe elements are not present in the inventory.");
+                Notification.Show("Missing ingredients for " + recipe.output.item.itemName + ".");
                 return;
             }
         }
@@ -29,5 +29,6 @@ public class Crafting : MonoBehaviour
         }
 
         inventory.Add(recipe.output.item, recipe.output.count);
+        Notification.Show("Crafted " + recipe.output.item.itemName);
     }
 }
