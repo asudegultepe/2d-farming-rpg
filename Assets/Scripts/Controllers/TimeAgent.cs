@@ -24,6 +24,9 @@ public class TimeAgent : MonoBehaviour
 
     private void OnDestroy()
     {
+        // when play mode ends the Game Manager may already be gone
+        if (GameManager.instance == null || GameManager.instance.timeController == null) { return; }
+
         GameManager.instance.timeController.Unsubscribe(this);
     }
 }
