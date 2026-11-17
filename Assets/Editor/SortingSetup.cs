@@ -337,6 +337,7 @@ public static class SortingSetup
         if (EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo() == false) { return; }
 
         SetSortAxis();
+        ClearSheets();
 
         StringBuilder report = new StringBuilder("Sort by feet done.\n");
         SceneSetup[] openScenes = EditorSceneManager.GetSceneManagerSetup();
@@ -346,12 +347,31 @@ public static class SortingSetup
             string path = AssetDatabase.GUIDToAssetPath(guid);
             GameObject root = PrefabUtility.LoadPrefabContents(path);
 
-            // prefabs get spawned, moved or change sprite at runtime, so they update themselves
-            if (HasWorldSprite(root, world) && root.GetComponent<SortByFeet>() == null)
+            // prefabs get spawned, moved or change sprite at runtime, so they update themselves;
+            // textures aren't readable in a build, so the grass skirt is measured here
+            if (HasWorldSprite(root, world))
             {
-                root.AddComponent<SortByFeet>();
-                PrefabUtility.SaveAsPrefabAsset(root, path);
-                report.AppendLine("  SortByFeet added to " + path);
+                SortByFeet sortByFeet = root.GetComponent<SortByFeet>();
+                bool added = sortByFeet == null;
+                if (added)
+                {
+                    sortByFeet = root.AddComponent<SortByFeet>();
+                }
+
+                SpriteRenderer lowest = SortByFeet.LowestSprite(root.GetComponentsInChildren<SpriteRenderer>(true));
+                float skirt = lowest != null ? MeasureGroundSkirt(lowest.sprite) : 0f;
+
+                SerializedObject data = new SerializedObject(sortByFeet);
+                SerializedProperty skirtProperty = data.FindProperty("groundSkirt");
+                bool skirtChanged = Mathf.Approximately(skirtProperty.floatValue, skirt) == false;
+                skirtProperty.floatValue = skirt;
+                data.ApplyModifiedPropertiesWithoutUndo();
+
+                if (added || skirtChanged)
+                {
+                    PrefabUtility.SaveAsPrefabAsset(root, path);
+                    report.AppendLine("  " + path + ": ground skirt " + skirt.ToString("0.00"));
+                }
             }
             PrefabUtility.UnloadPrefabContents(root);
         }
@@ -380,6 +400,7 @@ public static class SortingSetup
             EditorSceneManager.RestoreSceneManagerSetup(openScenes);
         }
 
+        ClearSheets();
         Debug.Log(report.ToString());
     }
 
@@ -429,7 +450,11 @@ public static class SortingSetup
             Transform target = group != null ? group.transform : sprite.transform;
             if (group != null && sprite.transform != target && target.GetComponent<SpriteRenderer>() != null) { continue; }
 
-            float z = SortByFeet.FeetZ(target, group, target.GetComponentsInChildren<SpriteRenderer>(true));
+            SpriteRenderer[] targetSprites = target.GetComponentsInChildren<SpriteRenderer>(true);
+            SpriteRenderer lowest = SortByFeet.LowestSprite(targetSprites);
+            float skirt = lowest != null ? MeasureGroundSkirt(lowest.sprite) * Mathf.Abs(lowest.transform.lossyScale.y) : 0f;
+
+            float z = SortByFeet.FeetZ(target, group, targetSprites, skirt);
             if (SetZ(target, z)) { baked++; }
         }
 
@@ -444,6 +469,78 @@ public static class SortingSetup
         }
 
         return baked;
+    }
+
+    // ---------- Ground skirt ----------
+
+    static readonly Dictionary<string, Texture2D> sheets = new Dictionary<string, Texture2D>();
+
+    // Grass: clearly greener than it is red or blue
+    static bool IsGrass(Color32 color)
+    {
+        return color.g > color.r + 12 && color.g > color.b + 12;
+    }
+
+    // Height (in units at scale 1) of the rows at the bottom of a sprite that hold only grass.
+    // The trees are drawn standing on a patch of grass that reaches below their trunk; the
+    // trunk is where they meet the ground. A sprite that is all grass (a bush) gets 0.
+    static float MeasureGroundSkirt(Sprite sprite)
+    {
+        if (sprite == null) { return 0f; }
+
+        Texture2D sheet = LoadSheet(AssetDatabase.GetAssetPath(sprite.texture));
+        if (sheet == null) { return 0f; }
+
+        // sprite.rect is in the imported texture's pixels, which may be smaller than the file
+        float scaleX = (float)sheet.width / sprite.texture.width;
+        float scaleY = (float)sheet.height / sprite.texture.height;
+        Rect rect = sprite.rect;
+        Color32[] pixels = sheet.GetPixels32();
+
+        for (int row = 0; row < (int)rect.height; row++)
+        {
+            int y = (int)((rect.y + row) * scaleY);
+            for (int column = 0; column < (int)rect.width; column++)
+            {
+                int x = (int)((rect.x + column) * scaleX);
+                Color32 color = pixels[y * sheet.width + x];
+                if (color.a > 200 && IsGrass(color) == false)
+                {
+                    return row / sprite.pixelsPerUnit;
+                }
+            }
+        }
+
+        return 0f;
+    }
+
+    static void ClearSheets()
+    {
+        foreach (Texture2D sheet in sheets.Values)
+        {
+            if (sheet != null) { Object.DestroyImmediate(sheet); }
+        }
+        sheets.Clear();
+    }
+
+    // The imported texture isn't readable, so read the source image instead
+    static Texture2D LoadSheet(string path)
+    {
+        if (sheets.TryGetValue(path, out Texture2D sheet)) { return sheet; }
+
+        sheet = null;
+        if (string.IsNullOrEmpty(path) == false && System.IO.File.Exists(path))
+        {
+            sheet = new Texture2D(2, 2);
+            if (sheet.LoadImage(System.IO.File.ReadAllBytes(path)) == false)
+            {
+                Object.DestroyImmediate(sheet);
+                sheet = null;
+            }
+        }
+
+        sheets[path] = sheet;
+        return sheet;
     }
 
     // Tall sprites end up several units behind z = 0. The camera is orthographic, so its
