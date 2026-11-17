@@ -11,14 +11,15 @@ using UnityEngine.UI;
 using static UIBuild;
 
 // Builds the pause menu into the Essentials canvas and the MainMenu scene,
-// both in the HUD style, and puts MainMenu + Essentials at the top of the build list.
+// both in the HUD style, puts MainMenu + Essentials at the top of the build list
+// and names the build after the game.
 public static class MenuBuilder
 {
     public const string HudSettingsButton = "SettingsButton";
     const string PauseRootName = "PauseMenu";
     const string MainMenuPath = "Assets/Scenes/" + PauseMenu.MainMenuScene + ".unity";
     const string EssentialsPath = "Assets/Scenes/" + MainMenu.GameScene + ".unity";
-    const string GameTitle = "Farming RPG";
+    const string GameTitle = "Goodbye Poppy";
 
     static readonly Color MenuBackground = new Color32(0x7f, 0xa8, 0x5c, 255);
 
@@ -229,5 +230,8 @@ public static class MenuBuilder
         }
 
         EditorBuildSettings.scenes = scenes.ToArray();
+
+        // window title and executable name
+        PlayerSettings.productName = GameTitle;
     }
 }
