@@ -25,8 +25,10 @@ public static class SortingSetup
 
     static readonly string[] NewLayers = { MarkerLayer, WorldLayer, OverheadLayer };
 
-    // Sprites the player walks on, kept under everything
-    static readonly string[] FlatKeywords = { "carpet", "rug", "drain", "bridge", "shadow" };
+    // Sprites the player walks on, kept under everything.
+    // Matched against object names, so avoid words that appear in sprite sheet names
+    // (Town objects are named after "building-shadowless").
+    static readonly string[] FlatKeywords = { "carpet", "rug", "drain", "bridge" };
 
     // Tilemaps whose tiles are standing objects, sorted tile by tile
     static readonly string[] ObjectTilemapKeywords = { "tree", "stone", "rock" };
