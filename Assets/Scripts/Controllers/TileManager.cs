@@ -9,12 +9,22 @@ public class TileManager : MonoBehaviour
     public CropsManager cropsManager;
     [SerializeField] Tilemap tilemap;
 
+    // The tilemap lives in the gameplay scene, so it's looked up again after every scene change.
+    // While a scene is still loading there is none yet.
+    void FindTilemap()
+    {
+        if (tilemap != null) { return; }
+
+        GameObject go = GameObject.Find("BackgroundTilemap");
+        if (go != null)
+        {
+            tilemap = go.GetComponent<Tilemap>();
+        }
+    }
+
     public Vector3Int GetGridPosition(Vector2 position, bool mousePosition)
     {
-        if (tilemap == null)
-        {
-            tilemap = GameObject.Find("BackgroundTilemap").GetComponent<Tilemap>();
-        }
+        FindTilemap();
 
         if (tilemap == null) { return Vector3Int.zero; }
 
@@ -36,10 +46,7 @@ public class TileManager : MonoBehaviour
 
     public TileBase GetTileBase(Vector3Int gridPosition)
     {
-        if (tilemap == null)
-        {
-            tilemap = GameObject.Find("BackgroundTilemap").GetComponent<Tilemap>();
-        }
+        FindTilemap();
 
         if (tilemap == null) { return null; }
 

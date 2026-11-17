@@ -21,6 +21,8 @@ public class ItemManager : MonoBehaviour
 
     private void Update()
     {
+        if (PauseMenu.IsPaused) { return; }
+
         if(itemIcon.activeInHierarchy == true)
         {
             iconTransform.position = Input.mousePosition;

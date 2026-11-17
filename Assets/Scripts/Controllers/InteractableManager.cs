@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 public class InteractableManager : MonoBehaviour
 {
@@ -23,10 +24,13 @@ public class InteractableManager : MonoBehaviour
 
     private void Update()
     {
+        if (PauseMenu.IsPaused) { return; }
+
         Check();
 
         if (Input.GetMouseButtonDown(1))
         {
+            if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject()) { return; }
             Interact();
         }
     }

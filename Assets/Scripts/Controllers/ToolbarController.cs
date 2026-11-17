@@ -26,6 +26,8 @@ public class ToolbarController : MonoBehaviour
 
     private void Update()
     {
+        if (PauseMenu.IsPaused) { return; }
+
         // number keys 1-9 select a slot directly
         for (int i = 0; i < toolbarSize && i < 9; i++)
         {

@@ -15,6 +15,8 @@ public class GameSceneManager : MonoBehaviour
 
     [SerializeField] ScreenTint screenTint;
     [SerializeField] CameraController cameraConfiner;
+    [Tooltip("Loaded for a new game when the game starts from the main menu")]
+    [SerializeField] string startScene = "MainHouse";
     string currentScene;
     AsyncOperation unload;
     AsyncOperation load;
@@ -27,6 +29,29 @@ public class GameSceneManager : MonoBehaviour
     void Start()
     {
         currentScene = SceneManager.GetActiveScene().name;
+
+        // Coming from the main menu only Essentials is loaded, so bring in the gameplay scene.
+        // In the editor a gameplay scene is usually open next to Essentials already.
+        if (currentScene == gameObject.scene.name)
+        {
+            string sceneToLoad = startScene;
+            if (SaveManager.instance != null && string.IsNullOrEmpty(SaveManager.instance.SavedScene) == false)
+            {
+                sceneToLoad = SaveManager.instance.SavedScene;
+            }
+
+            // set right away so SaveManager sees the player is already in the saved scene
+            currentScene = sceneToLoad;
+            StartCoroutine(LoadStartScene(sceneToLoad));
+        }
+    }
+
+    IEnumerator LoadStartScene(string sceneName)
+    {
+        yield return SceneManager.LoadSceneAsync(sceneName, LoadSceneMode.Additive);
+
+        SceneManager.SetActiveScene(SceneManager.GetSceneByName(sceneName));
+        cameraConfiner.UpdateBounds();
     }
 
     public void InitSwitchScene(string to, Vector3 targetPosition)

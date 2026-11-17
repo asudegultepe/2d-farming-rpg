@@ -12,7 +12,18 @@ public class MusicManager : MonoBehaviour
 
     private void Start()
     {
+        GameSettings.onChanged += ApplyVolume;
         Play(playOnStart, true);
+    }
+
+    private void OnDestroy()
+    {
+        GameSettings.onChanged -= ApplyVolume;
+    }
+
+    void ApplyVolume()
+    {
+        audioSource.volume = GameSettings.MusicVolume;
     }
 
     private void Play(AudioClip musicToPlay, bool interrupt = false) 
@@ -21,7 +32,7 @@ public class MusicManager : MonoBehaviour
 
         if (interrupt == true)
         {
-            audioSource.volume = 1f;
+            audioSource.volume = GameSettings.MusicVolume;
             audioSource.clip = musicToPlay;
             audioSource.Play();
         }
@@ -43,7 +54,7 @@ public class MusicManager : MonoBehaviour
         {
             volume -= Time.deltaTime / timeToSwitch;
             if (volume < 0f) { volume = 0f; }
-            audioSource.volume = volume;
+            audioSource.volume = volume * GameSettings.MusicVolume;
             yield return new WaitForEndOfFrame();
         }
 

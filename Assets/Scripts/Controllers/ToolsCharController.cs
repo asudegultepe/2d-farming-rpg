@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.Tilemaps;
 
 public class ToolsCharController : MonoBehaviour
@@ -29,11 +30,16 @@ public class ToolsCharController : MonoBehaviour
 
     private void Update()
     {
+        if (PauseMenu.IsPaused) { return; }
+
         SelectTile();
         CanSelectCheck();
         Marker();
         if (Input.GetMouseButtonDown(0))
         {
+            // a click on the toolbar or a menu shouldn't also swing the tool
+            if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject()) { return; }
+
             if(UseToolWorld() == true){
                 return;
             }

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 // Same layout as the crafting panel: one button per item for sale, click to buy one.
-// Closes by itself when the player walks away from the shopkeeper.
+// Closes by itself when the player walks away from the shopkeeper, or on Escape.
 public class ShopPanel : ItemPanel
 {
     [SerializeField] float closeDistance = 3f;
@@ -24,14 +24,14 @@ public class ShopPanel : ItemPanel
         gameObject.SetActive(false);
     }
 
+    public bool IsOpen
+    {
+        get { return gameObject.activeSelf; }
+    }
+
+    // Escape is handled by PauseMenu, which closes the shop before it would pause
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Escape))
-        {
-            Close();
-            return;
-        }
-
         if (shopkeeper == null) { return; }
 
         Vector3 playerPosition = GameManager.instance.player.transform.position;

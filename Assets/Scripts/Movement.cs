@@ -25,6 +25,8 @@ public class Movement : MonoBehaviour
 
     private void Update()
     {
+        if (PauseMenu.IsPaused) { return; }
+
         float horizontal = Input.GetAxisRaw("Horizontal");
         float vertical = Input.GetAxisRaw("Vertical");
 

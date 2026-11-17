@@ -14,6 +14,23 @@ public class SaveManager : MonoBehaviour
         get { return Path.Combine(Application.persistentDataPath, FileName); }
     }
 
+    public static bool HasSave
+    {
+        get { return File.Exists(SavePath); }
+    }
+
+    public static void DeleteSave()
+    {
+        if (HasSave)
+        {
+            File.Delete(SavePath);
+        }
+    }
+
+    // Gameplay scene stored in the save, empty for a new game.
+    // GameSceneManager loads it when the game starts from the main menu.
+    public string SavedScene { get; private set; }
+
     [SerializeField] KeyCode saveKey = KeyCode.F5;
 
     SaveDatabase database;
@@ -54,6 +71,7 @@ public class SaveManager : MonoBehaviour
         if (Input.GetKeyDown(saveKey))
         {
             Save();
+            Notification.Show("Game saved");
         }
     }
 
@@ -127,7 +145,11 @@ public class SaveManager : MonoBehaviour
     private void Load()
     {
         if (database == null) { return; }
-        if (File.Exists(SavePath) == false) { return; }
+        if (HasSave == false)
+        {
+            StartNewGame();
+            return;
+        }
 
         SaveData data;
         try
@@ -147,8 +169,41 @@ public class SaveManager : MonoBehaviour
             GameManager.instance.wallet.Money = data.money;
         }
         destroyedNodes = new HashSet<string>(data.destroyedNodes);
+        SavedScene = data.sceneName;
 
         StartCoroutine(LoadWorld(data));
+    }
+
+    // Resets the asset-backed state (inventory, crops) that would otherwise
+    // carry over from an earlier game or from playing in the editor
+    private void StartNewGame()
+    {
+        NewGameSettings settings = Resources.Load<NewGameSettings>(NewGameSettings.ResourcePath);
+        if (settings == null)
+        {
+            Debug.LogWarning("NewGameSettings not found in Resources, starting with the current inventory.");
+            return;
+        }
+
+        ItemContainer inventory = GameManager.instance.inventoryContainer;
+        foreach (ItemSlot slot in inventory.slots)
+        {
+            slot.Clear();
+        }
+        foreach (ItemSlot slot in settings.startingItems)
+        {
+            if (slot.item != null)
+            {
+                inventory.Add(slot.item, slot.count);
+            }
+        }
+
+        foreach (CropsContainer container in database.cropsContainers)
+        {
+            container.crops = new List<CropTile>();
+        }
+
+        GameManager.instance.wallet.Money = settings.startingMoney;
     }
 
     private void LoadInventory(SaveData data)

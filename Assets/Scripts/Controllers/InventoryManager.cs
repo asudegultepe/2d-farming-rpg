@@ -11,6 +11,8 @@ public class InventoryManager : MonoBehaviour
 
     private void Update()
     {
+        if (PauseMenu.IsPaused) { return; }
+
         if (Input.GetKeyDown(KeyCode.E))
         {
             ClosePanel();

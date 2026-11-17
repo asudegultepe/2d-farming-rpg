@@ -5,34 +5,15 @@ using TMPro;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
-using UnityEngine.TextCore.LowLevel;
 using UnityEngine.UI;
+using static UIBuild;
 
 // Builds the HUD from the sprites in Assets/Sprites/UI/HUD into the existing Essentials canvas
 // and wires it to the game: clock and calendar (DayTimeController), gold (MoneyDisplay)
 // and the toolbar (ItemToolbarPanel). Running it again replaces the previous HUD.
-// Layout values are in design pixels (1280x720) and scaled to the canvas reference resolution.
 public static class HudBuilder
 {
-    const string Folder = HudSpriteImporter.Folder;
-    const string FontPath = "Assets/Fonts/PixelifySans/PixelifySans.ttf";
-    const string FontAssetPath = "Assets/Fonts/PixelifySans/PixelifySans SDF.asset";
-    const string RootName = "HUD";
-    const float DesignHeight = 720f;
-
-    static readonly Color TextMain = new Color32(0x5b, 0x3f, 0x4d, 255);
-    static readonly Color TextSoft = new Color32(0x6b, 0x4b, 0x5b, 255);
-    static readonly Color Divider = new Color32(0xc4, 0x9a, 0x6c, 255);
-    static readonly Color BarFill = new Color32(0xa4, 0xc2, 0x63, 255);
-
-    static readonly Vector2 TopLeft = new Vector2(0f, 1f);
-    static readonly Vector2 TopRight = new Vector2(1f, 1f);
-    static readonly Vector2 BottomRight = new Vector2(1f, 0f);
-    static readonly Vector2 BottomCenter = new Vector2(0.5f, 0f);
-    static readonly Vector2 Center = new Vector2(0.5f, 0.5f);
-
-    static TMP_FontAsset font;
-    static float scale = 1f;
+    public const string RootName = "HUD";
 
     [MenuItem("Tools/Setup/HUD (open Essentials first)")]
     public static void Build()
@@ -57,14 +38,7 @@ public static class HudBuilder
         }
 
         PrepareSprites();
-        font = FindOrCreateFont();
-
-        CanvasScaler scaler = canvas.GetComponent<CanvasScaler>();
-        scale = 1f;
-        if (scaler != null && scaler.uiScaleMode == CanvasScaler.ScaleMode.ScaleWithScreenSize)
-        {
-            scale = scaler.referenceResolution.y / DesignHeight;
-        }
+        Begin(canvas);
 
         Undo.SetCurrentGroupName("Build HUD");
         int undoGroup = Undo.GetCurrentGroup();
@@ -98,6 +72,9 @@ public static class HudBuilder
         inventoryManagerData.FindProperty("toolbarPanel").objectReferenceValue = hotbar.gameObject;
         inventoryManagerData.FindProperty("dayTime").objectReferenceValue = info.gameObject;
         inventoryManagerData.ApplyModifiedProperties();
+
+        // the settings button needs the pause menu, which may already be there
+        MenuBuilder.ConnectHudSettingsButton(canvas);
 
         Undo.CollapseUndoOperations(undoGroup);
         EditorSceneManager.MarkSceneDirty(canvas.gameObject.scene);
@@ -152,7 +129,7 @@ public static class HudBuilder
     static void BuildMenuButtons(Transform parent)
     {
         string[] sprites = { "button_quests", "button_map", "button_settings" };
-        string[] names = { "QuestsButton", "MapButton", "SettingsButton" };
+        string[] names = { "QuestsButton", "MapButton", MenuBuilder.HudSettingsButton };
 
         for (int i = 0; i < sprites.Length; i++)
         {
@@ -203,11 +180,11 @@ public static class HudBuilder
         Sprite frame = Load("slot");
         Sprite selected = Load("slot_selected");
 
-        RectTransform slot = Rect(name, hotbar, TopLeft, Center, center, NativeSize(frame));
+        RectTransform slot = Rect(name, hotbar, TopLeft, Center, center, NativeSize(frame, new Vector2(60f, 63f)));
         Image frameImage = slot.gameObject.AddComponent<Image>();
         frameImage.sprite = frame;
 
-        RectTransform highlight = Rect("Highlight", slot, Center, Center, Vector2.zero, NativeSize(selected));
+        RectTransform highlight = Rect("Highlight", slot, Center, Center, Vector2.zero, NativeSize(selected, new Vector2(54f, 57f)));
         Image highlightImage = highlight.gameObject.AddComponent<Image>();
         highlightImage.sprite = selected;
         highlightImage.raycastTarget = false;
@@ -249,7 +226,7 @@ public static class HudBuilder
     // ---------- Scene helpers ----------
 
     // The canvas the current toolbar lives on, otherwise the first one in the scene
-    static Canvas FindCanvas(GameObject toolbar)
+    public static Canvas FindCanvas(GameObject toolbar)
     {
         if (toolbar != null)
         {
@@ -280,12 +257,10 @@ public static class HudBuilder
         }
     }
 
-    // ---------- Assets ----------
-
     // Sprites copied in before HudSpriteImporter compiled miss its settings, so reimport those
     static void PrepareSprites()
     {
-        foreach (string file in Directory.GetFiles(Folder, "*.png"))
+        foreach (string file in Directory.GetFiles(SpriteFolder, "*.png"))
         {
             string path = file.Replace('\\', '/');
             TextureImporter importer = AssetImporter.GetAtPath(path) as TextureImporter;
@@ -296,124 +271,5 @@ public static class HudBuilder
                 AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate);
             }
         }
-    }
-
-    static TMP_FontAsset FindOrCreateFont()
-    {
-        TMP_FontAsset existing = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(FontAssetPath);
-        if (existing != null) { return existing; }
-
-        Font source = AssetDatabase.LoadAssetAtPath<Font>(FontPath);
-        if (source == null)
-        {
-            Debug.LogWarning("HUD: " + FontPath + " not found, using the default TextMeshPro font.");
-            return null;
-        }
-
-        // dynamic asset: glyphs are added to the atlas the first time they're used
-        TMP_FontAsset asset = TMP_FontAsset.CreateFontAsset(source, 90, 9, GlyphRenderMode.SDFAA, 1024, 1024);
-        AssetDatabase.CreateAsset(asset, FontAssetPath);
-
-        asset.atlasTextures[0].name = "PixelifySans Atlas";
-        AssetDatabase.AddObjectToAsset(asset.atlasTextures[0], asset);
-        asset.material.name = "PixelifySans Material";
-        AssetDatabase.AddObjectToAsset(asset.material, asset);
-        AssetDatabase.SaveAssets();
-
-        return asset;
-    }
-
-    static Sprite Load(string name)
-    {
-        Sprite sprite = AssetDatabase.LoadAssetAtPath<Sprite>(Folder + "/" + name + ".png");
-        if (sprite == null)
-        {
-            Debug.LogWarning("HUD: sprite not found: " + name);
-        }
-        return sprite;
-    }
-
-    // The sprites are drawn at 3x for a 1280x720 screen, so their pixel size is their design size
-    static Vector2 NativeSize(Sprite sprite)
-    {
-        return sprite != null ? sprite.rect.size : new Vector2(60f, 63f);
-    }
-
-    // ---------- Layout helpers (all sizes in design pixels) ----------
-
-    static RectTransform Rect(string name, Transform parent, Vector2 anchor, Vector2 pivot, Vector2 position, Vector2 size)
-    {
-        GameObject go = new GameObject(name, typeof(RectTransform));
-        RectTransform rect = (RectTransform)go.transform;
-        rect.SetParent(parent, false);
-        rect.anchorMin = rect.anchorMax = anchor;
-        rect.pivot = pivot;
-        rect.anchoredPosition = position * scale;
-        rect.sizeDelta = size * scale;
-        return rect;
-    }
-
-    static RectTransform Stretch(string name, Transform parent)
-    {
-        GameObject go = new GameObject(name, typeof(RectTransform));
-        RectTransform rect = (RectTransform)go.transform;
-        rect.SetParent(parent, false);
-        rect.anchorMin = Vector2.zero;
-        rect.anchorMax = Vector2.one;
-        rect.offsetMin = rect.offsetMax = Vector2.zero;
-        return rect;
-    }
-
-    // Box pinned to a corner of its parent: anchor = pivot = corner
-    static RectTransform Panel(string name, Transform parent, Vector2 corner, Vector2 position, Vector2 size)
-    {
-        RectTransform rect = Rect(name, parent, corner, corner, position, size);
-        Image image = rect.gameObject.AddComponent<Image>();
-        image.sprite = Load("panel");
-        image.type = Image.Type.Sliced;
-        // scale the 9-slice borders together with the layout
-        image.pixelsPerUnitMultiplier = 1f / scale;
-        return rect;
-    }
-
-    // x, y: pixels from the parent's top left corner
-    static RectTransform Img(string name, Transform parent, string sprite, float x, float y, float w, float h, bool sliced = false)
-    {
-        RectTransform rect = Rect(name, parent, TopLeft, TopLeft, new Vector2(x, -y), new Vector2(w, h));
-        Image image = rect.gameObject.AddComponent<Image>();
-        image.sprite = Load(sprite);
-        image.raycastTarget = false;
-        if (sliced)
-        {
-            image.type = Image.Type.Sliced;
-            image.pixelsPerUnitMultiplier = 1f / scale;
-        }
-        return rect;
-    }
-
-    static RectTransform Solid(string name, Transform parent, Color color, float x, float y, float w, float h)
-    {
-        RectTransform rect = Rect(name, parent, TopLeft, TopLeft, new Vector2(x, -y), new Vector2(w, h));
-        Image image = rect.gameObject.AddComponent<Image>();
-        image.color = color;
-        image.raycastTarget = false;
-        return rect;
-    }
-
-    static TextMeshProUGUI Txt(string name, Transform parent, string text, float x, float y, float w, float h,
-        float size, bool bold, Color color, TextAlignmentOptions alignment)
-    {
-        RectTransform rect = Rect(name, parent, TopLeft, TopLeft, new Vector2(x, -y), new Vector2(w, h));
-        TextMeshProUGUI label = rect.gameObject.AddComponent<TextMeshProUGUI>();
-        if (font != null) { label.font = font; }
-        label.text = text;
-        label.fontSize = size * scale;
-        label.fontStyle = bold ? FontStyles.Bold : FontStyles.Normal;
-        label.color = color;
-        label.alignment = alignment;
-        label.enableWordWrapping = false;
-        label.overflowMode = TextOverflowModes.Overflow;
-        label.raycastTarget = false;
-        return label;
     }
 }

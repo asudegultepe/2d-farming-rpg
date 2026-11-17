@@ -23,6 +23,8 @@ public class DialogueSystem : MonoBehaviour
 
     private void Update()
     {
+        if (PauseMenu.IsPaused) { return; }
+
         if (Input.GetMouseButtonDown(0))
         {
             PushText();
