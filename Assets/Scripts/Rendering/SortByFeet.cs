@@ -3,25 +3,28 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
 
-// The 2D renderer sorts the World layer along the axis (0, 1, 1): lower on screen
-// draws in front, and z shifts an object's place in that order without any visible
-// effect in 2D. All sprites have centered pivots, so a tall sprite would otherwise
-// sort by its middle; pushing z down by the distance from that sort point to the
-// sprite's bottom edge makes everything sort by where it stands instead.
+// Draw order on the World layer comes from where each object stands: the lower its
+// feet are on screen, the higher its Order in Layer, so it draws in front.
 //
-// Some sprites (the trees) have a skirt of grass under their trunk. The object doesn't
-// stand on that, so its height is added back on top of the bottom edge.
+// The feet are the bottom edge of the object's lowest sprite. Some sprites (the trees)
+// have a skirt of grass under their trunk that the object doesn't stand on, so its
+// height is added on top of the bottom edge.
 //
-// Static scene objects get their z baked by the Sort By Feet editor tool.
+// Static scene objects get their order baked by the Sort By Feet editor tool.
 // This component keeps it right for things that are spawned, move or change sprite.
 [DisallowMultipleComponent]
 public class SortByFeet : MonoBehaviour
 {
+    // Order in Layer per world unit. Objects 1/100 of a unit apart still sort apart,
+    // and the order stays inside its ±32767 range for heights within ±327 units.
+    public const float OrderPerUnit = 100f;
+
     [Tooltip("Height of the grass at the bottom of the sprite, in units at scale 1. Measured by the Sort By Feet tool.")]
     [SerializeField] float groundSkirt;
 
     SortingGroup group;
     SpriteRenderer[] sprites;
+    int appliedOrder = int.MinValue;
 
     private void Awake()
     {
@@ -31,52 +34,37 @@ public class SortByFeet : MonoBehaviour
 
     private void LateUpdate()
     {
-        float z = FeetZ(transform, group, sprites, groundSkirt * Mathf.Abs(transform.lossyScale.y));
-        Vector3 position = transform.position;
+        if (TryGetOrder(sprites, groundSkirt * Mathf.Abs(transform.lossyScale.y), out int order) == false) { return; }
 
-        // only touch the transform when something actually changed
-        if (Mathf.Approximately(position.z, z) == false)
+        // only touch the renderers when the order actually changes
+        if (order == appliedOrder) { return; }
+        appliedOrder = order;
+
+        if (group != null)
         {
-            position.z = z;
-            transform.position = position;
+            group.sortingOrder = order;
+            return;
         }
-    }
-
-    // World z that makes this object sort by the bottom of its sprites, raised by the
-    // ground skirt (in world units)
-    public static float FeetZ(Transform target, SortingGroup group, SpriteRenderer[] sprites, float groundSkirt)
-    {
-        bool found = false;
-        float bottom = 0f;
-        float sortPoint = 0f;
 
         foreach (SpriteRenderer sprite in sprites)
         {
-            if (sprite.sprite == null || sprite.enabled == false || sprite.gameObject.activeInHierarchy == false) { continue; }
-
-            Bounds bounds = sprite.bounds;
-            if (found == false || bounds.min.y < bottom)
-            {
-                bottom = bounds.min.y;
-            }
-
-            if (found == false)
-            {
-                // a sorting group sorts at its own position, a lone sprite at its sort point
-                sortPoint = group != null || sprite.spriteSortPoint == SpriteSortPoint.Pivot
-                    ? sprite.transform.position.y
-                    : bounds.center.y;
-            }
-            found = true;
+            sprite.sortingOrder = order;
         }
-
-        if (found == false) { return target.position.z; }
-        if (group != null) { sortPoint = target.position.y; }
-
-        return bottom + groundSkirt - sortPoint;
     }
 
-    // Lowest visible sprite, the one whose bottom FeetZ sorts by
+    // Order in Layer for an object made of these sprites, with the ground skirt in world units
+    public static bool TryGetOrder(SpriteRenderer[] sprites, float groundSkirt, out int order)
+    {
+        order = 0;
+        SpriteRenderer lowest = LowestSprite(sprites);
+        if (lowest == null) { return false; }
+
+        float feet = lowest.bounds.min.y + groundSkirt;
+        order = Mathf.RoundToInt(-feet * OrderPerUnit);
+        return true;
+    }
+
+    // Lowest visible sprite, the one the object stands on
     public static SpriteRenderer LowestSprite(SpriteRenderer[] sprites)
     {
         SpriteRenderer lowest = null;

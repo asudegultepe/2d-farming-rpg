@@ -1,7 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
-using Cinemachine;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -30,9 +29,6 @@ public static class SortingSetup
     // Matched against object names, so avoid words that appear in sprite sheet names
     // (Town objects are named after "building-shadowless").
     static readonly string[] FlatKeywords = { "carpet", "rug", "drain", "bridge" };
-
-    // Tilemaps whose tiles are standing objects, sorted tile by tile
-    static readonly string[] ObjectTilemapKeywords = { "tree", "stone", "rock" };
 
     const string PrefabFolder = "Assets/Prefabs";
     const string SceneFolder = "Assets/Scenes";
@@ -232,14 +228,7 @@ public static class SortingSetup
             return true;
         }
 
-        if (NameContains(tilemap.gameObject, ObjectTilemapKeywords))
-        {
-            // Individual mode sorts each tile by its own position instead of the whole map at once
-            tilemap.mode = TilemapRenderer.Mode.Individual;
-            SetLayer(tilemap, worldId, 0);
-            return true;
-        }
-
+        // other tilemaps are ground and stay on Default
         return false;
     }
 
@@ -315,8 +304,9 @@ public static class SortingSetup
 
     // ---------- Sort by feet ----------
 
-    // Turns on sorting along (0, 1, 1) in the 2D renderer and sets every World object's z
-    // so it sorts by its bottom edge (see SortByFeet). Safe to run again.
+    // Sets every World object's Order in Layer from where it stands (see SortByFeet):
+    // baked for static scene objects, kept up to date at runtime by SortByFeet on prefabs
+    // and the player. Safe to run again.
     [MenuItem("Tools/Setup/Sort By Feet")]
     public static void SortByFeetSetup()
     {
@@ -328,8 +318,8 @@ public static class SortingSetup
         }
 
         if (EditorUtility.DisplayDialog("Sort By Feet",
-            "This changes the 2D renderer's sort axis, adds SortByFeet to the prefabs in " + PrefabFolder +
-            " and sets the z position of objects in every scene in " + SceneFolder + ", then saves them.", "Run", "Cancel") == false)
+            "This adds SortByFeet to the prefabs in " + PrefabFolder +
+            " and sets the Order in Layer of objects in every scene in " + SceneFolder + ", then saves them.", "Run", "Cancel") == false)
         {
             return;
         }
@@ -384,8 +374,7 @@ public static class SortingSetup
             int baked = 0;
             foreach (GameObject root in scene.GetRootGameObjects())
             {
-                baked += BakeFeetZ(root, world);
-                baked += PullBackCameras(root);
+                baked += BakeFeetOrder(root, world);
             }
 
             if (baked > 0)
@@ -410,8 +399,9 @@ public static class SortingSetup
         {
             Object rendererData = AssetDatabase.LoadAssetAtPath<Object>(AssetDatabase.GUIDToAssetPath(guid));
             SerializedObject data = new SerializedObject(rendererData);
+            // Order in Layer does the sorting; the y axis only breaks ties between equal orders
             data.FindProperty("m_TransparencySortMode").intValue = (int)TransparencySortMode.CustomAxis;
-            data.FindProperty("m_TransparencySortAxis").vector3Value = new Vector3(0f, 1f, 1f);
+            data.FindProperty("m_TransparencySortAxis").vector3Value = new Vector3(0f, 1f, 0f);
             data.ApplyModifiedPropertiesWithoutUndo();
             EditorUtility.SetDirty(rendererData);
         }
@@ -427,8 +417,8 @@ public static class SortingSetup
         return false;
     }
 
-    // Static objects get a fixed z; anything with SortByFeet (player, prefab instances) does it at runtime
-    static int BakeFeetZ(GameObject root, int world)
+    // Static objects get a fixed order; anything with SortByFeet (player, prefab instances) does it at runtime
+    static int BakeFeetOrder(GameObject root, int world)
     {
         int baked = 0;
 
@@ -445,7 +435,7 @@ public static class SortingSetup
         {
             if (sprite.sortingLayerID != world || sprite.GetComponentInParent<SortByFeet>(true) != null) { continue; }
 
-            // an object made of several sprites is moved as a whole, from its sorting group
+            // an object made of several sprites sorts as a whole, through its sorting group
             SortingGroup group = sprite.GetComponentInParent<SortingGroup>(true);
             Transform target = group != null ? group.transform : sprite.transform;
             if (group != null && sprite.transform != target && target.GetComponent<SpriteRenderer>() != null) { continue; }
@@ -453,22 +443,53 @@ public static class SortingSetup
             SpriteRenderer[] targetSprites = target.GetComponentsInChildren<SpriteRenderer>(true);
             SpriteRenderer lowest = SortByFeet.LowestSprite(targetSprites);
             float skirt = lowest != null ? MeasureGroundSkirt(lowest.sprite) * Mathf.Abs(lowest.transform.lossyScale.y) : 0f;
+            if (SortByFeet.TryGetOrder(targetSprites, skirt, out int order) == false) { continue; }
 
-            float z = SortByFeet.FeetZ(target, group, targetSprites, skirt);
-            if (SetZ(target, z)) { baked++; }
+            bool changed = false;
+            if (group != null)
+            {
+                changed |= SetOrder(group, order);
+            }
+            else
+            {
+                changed |= SetOrder(sprite, order);
+            }
+
+            // an earlier version of this tool sorted by z offsets; those aren't needed any more
+            changed |= SetZ(target, 0f);
+            if (changed) { baked++; }
         }
 
-        // tiles sort by their cell center, move them down to the cell's bottom edge
+        // marker tilemaps that an earlier version moved to World by name (TreeAndStone)
         foreach (TilemapRenderer tilemap in root.GetComponentsInChildren<TilemapRenderer>(true))
         {
             if (tilemap.sortingLayerID != world) { continue; }
 
-            Grid grid = tilemap.GetComponentInParent<Grid>();
-            float halfCell = grid != null ? grid.cellSize.y * tilemap.transform.lossyScale.y / 2f : 0.5f;
-            if (SetZ(tilemap.transform, -halfCell)) { baked++; }
+            tilemap.mode = TilemapRenderer.Mode.Chunk;
+            SetLayer(tilemap, 0, tilemap.sortingOrder);
+            SetZ(tilemap.transform, 0f);
+            baked++;
         }
 
         return baked;
+    }
+
+    static bool SetOrder(SortingGroup group, int order)
+    {
+        if (group.sortingOrder == order) { return false; }
+
+        group.sortingOrder = order;
+        Record(group);
+        return true;
+    }
+
+    static bool SetOrder(Renderer renderer, int order)
+    {
+        if (renderer.sortingOrder == order) { return false; }
+
+        renderer.sortingOrder = order;
+        Record(renderer);
+        return true;
     }
 
     // ---------- Ground skirt ----------
@@ -544,27 +565,6 @@ public static class SortingSetup
 
         sheets[path] = sheet;
         return sheet;
-    }
-
-    // Tall sprites end up several units behind z = 0. The camera is orthographic, so its
-    // distance doesn't change the picture, but it has to stay in front of all of them.
-    const float MinCameraDistance = 20f;
-
-    static int PullBackCameras(GameObject root)
-    {
-        int changed = 0;
-
-        foreach (CinemachineVirtualCamera virtualCamera in root.GetComponentsInChildren<CinemachineVirtualCamera>(true))
-        {
-            CinemachineFramingTransposer transposer = virtualCamera.GetCinemachineComponent<CinemachineFramingTransposer>();
-            if (transposer == null || transposer.m_CameraDistance >= MinCameraDistance) { continue; }
-
-            transposer.m_CameraDistance = MinCameraDistance;
-            EditorUtility.SetDirty(transposer);
-            changed++;
-        }
-
-        return changed;
     }
 
     static bool SetZ(Transform target, float z)
